@@ -52,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -85,17 +86,24 @@ fun RegisterScreen(navController: NavController, viewModel: AuthenticationViewmo
     var confirmPasswordError by remember { mutableStateOf<String?>(null) }
     val signinflow = viewModel.signupflow.collectAsState()
     val context = LocalContext.current
-    var profilePhotoUri by remember { mutableStateOf<Uri?>(null) }
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri ->
-            // Handle the selected image URI
-            profilePhotoUri = uri // Update the profile photo URI
-            if (uri != null) {
-                Toast.makeText(context, "Image Selected: $uri", Toast.LENGTH_SHORT).show()
-            }
+//    var profilePhotoUri by remember { mutableStateOf(Uri.EMPTY) }
+    val profilePhotoUri by viewModel.images.collectAsState()
+    val launcher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+
+            viewModel.setImage(uri)
         }
-    )
+
+//    val imagePickerLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.GetContent(),
+//        onResult = { uri ->
+//            // Handle the selected image URI
+//            profilePhotoUri = uri // Update the profile photo URI
+//            if (uri != null) {
+//                Toast.makeText(context, "Image Selected: $uri", Toast.LENGTH_SHORT).show()
+//            }
+//        }
+//    )
 
     Column(
         modifier = Modifier
@@ -112,7 +120,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthenticationViewmo
                 .size(120.dp)
                 .background(MaterialTheme.colorScheme.surface, CircleShape)
                 .clickable {
-                    imagePickerLauncher.launch("image/*")
+                    launcher.launch("image/*")
                 }
         ) {   Canvas(modifier = Modifier.matchParentSize()) {
             drawCircle(
@@ -143,27 +151,44 @@ fun RegisterScreen(navController: NavController, viewModel: AuthenticationViewmo
                         // Inner content size (image or placeholder)
                         .clip(CircleShape)
                 ) {
-
-                    if (profilePhotoUri == null) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Profile Photo",
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                            modifier = Modifier.size(120.dp)
-                        )
+                    val painter: Painter = if (profilePhotoUri != null) {
+                        rememberAsyncImagePainter(model = profilePhotoUri)
                     } else {
-                        Image(
-                            painter = rememberAsyncImagePainter(profilePhotoUri),
-                            contentDescription = "Profile Photo",
-                            contentScale = ContentScale.FillBounds,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(CircleShape)
-
-                        )
+                        painterResource(id = R.drawable.chat)
                     }
+                    Image(
+                        painter = painter,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                            .clickable {
+                                launcher.launch("image/*")
+                            }
+
+
+                    )
+//                    if (profilePhotoUri == null) {
+//                        Icon(
+//                            imageVector = profilePhotoUri,
+//                            contentDescription = "Profile Photo",
+//                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+//                            modifier = Modifier.size(120.dp)
+//                        )
+//                    } else {
+//                        Image(
+//                            painter = rememberAsyncImagePainter(painter),
+//                            contentDescription = "Profile Photo",
+//                            contentScale = ContentScale.FillBounds,
+//                            modifier = Modifier
+//                                .fillMaxSize()
+//                                .clip(CircleShape)
+//
+//                        )
+//                    }
                     IconButton(
-                        onClick = { imagePickerLauncher.launch("image/*") }, // Trigger the image upload function
+                        onClick = {  launcher.launch("image/*")}, // Trigger the image upload function
                         modifier = Modifier
                             .size(75.dp) // Size of the plus button
                             .align(Alignment.BottomEnd) // Position it at the bottom right
@@ -174,7 +199,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthenticationViewmo
                             contentDescription = "Upload Profile Photo",
                             tint = Color.Black,
                             modifier = Modifier
-                                .size(75.dp)
+                                .size(25.dp)
                                 .background(color = Color.White, CircleShape)
                                 .clip(CircleShape)
                                 .border(2.dp, color = Color.Black, CircleShape)
@@ -343,7 +368,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthenticationViewmo
                                 isValid = false
                             } else {
                                 Log.e("TAG", "RegisterScreen:profilePhotoUri "+profilePhotoUri, )
-                                viewModel.signup(name, email, password,profilePhotoUri)
+                                viewModel.signup(context,name, email, password)
                             }
 //
 

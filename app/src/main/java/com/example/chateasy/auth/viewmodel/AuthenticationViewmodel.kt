@@ -1,6 +1,7 @@
 package com.example.chateasy.auth.viewmodel
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -40,9 +41,14 @@ class AuthenticationViewmodel @Inject constructor(
 
     private val _loginState = MutableStateFlow<Response<FirebaseUser>?>(null)
     val loginState: StateFlow<Response<FirebaseUser>?> = _loginState
+    private val _images = MutableStateFlow<Uri?>(null)
+    var images: StateFlow<Uri?> = _images
 
 //    private val _otpState = MutableStateFlow<Response<String>?>(null) // For OTP-specific responses
 //    val otpState: StateFlow<Response<String>?> = _otpState
+fun setImage(imageUri: Uri?) {
+    _images.value = imageUri
+}
 
     val currentUser: FirebaseUser?
         get() = repository.currentUser
@@ -61,46 +67,31 @@ class AuthenticationViewmodel @Inject constructor(
         _login.value = result
     }
 
-//    fun signup(name: String, email: String, password: String) = viewModelScope.launch {
-//        _signup.value = Response.Loading
-//        val result = repository.firebaseSignUp(name, email, password)
-//        _signup.value = result
-//    }
 
 
-    fun signup(name: String, email: String, password: String, profilePhotoUri: Uri?) = viewModelScope.launch {
+
+    fun signup(context: Context, name: String, email: String, password: String) = viewModelScope.launch {
         _signup.value = Response.Loading
         try {
-            // Step 1: Create user in Firebase Authentication
-            val authResult = repository.firebaseSignUp(name, email, password,profilePhotoUri)
-
-            // Step 2: Upload profile photo to Firebase Storage if it's not null
-            var profilePhotoUrl: String? = null
-            if (profilePhotoUri != null) {
-                // Upload the image to Firebase Storage and get the URL
-                profilePhotoUrl = repository.uploadProfilePhotoToStorage(profilePhotoUri)
+            val imageUri = _images.value
+            if (imageUri == null) {
+                _signup.value = Response.Error("Profile image is required.")
+                return@launch
             }
 
+            val authResult = repository.firebaseSignUp( name, email, password, imageUri,context)
 
             if (authResult is Response.Success) {
-                val userId = authResult.data?.uid
-                if (userId != null) {
-                    // Save the additional user details in Firestore
-                    val user = User(
-                        name = name,
-                        email = email,
-                        profilePhotoUrl = profilePhotoUrl
-                    )
-                    repository.saveUserDataToFirestore(userId, user)
-                }
                 _signup.value = Response.Success(authResult.data)
             } else {
-                _signup.value = authResult // Handle failure (e.g., network issues)
+                _signup.value = authResult
             }
         } catch (e: Exception) {
             _signup.value = Response.Error("An error occurred: ${e.message}")
         }
     }
+
+
 
     //    fun sendOtp(phoneNumber: String, activity: Activity) {
 //        _otpState.value = Response.Loading

@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "827760967023",
-    "project_id": "chateasy-5faaf",
-    "storage_bucket": "chateasy-5faaf.firebasestorage.app"
+    "project_number": "380252412899",
+    "project_id": "chateasy-7ba72",
+    "storage_bucket": "chateasy-7ba72.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:827760967023:android:02afa3a58ec3a8699c7c9a",
+        "mobilesdk_app_id": "1:380252412899:android:befdc0a314d2f564871ed6",
         "android_client_info": {
           "package_name": "com.example.chateasy"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBPsQpiJrLPC90GewOMmltZhDIEfOHIHuA"
+          "current_key": "AIzaSyCz6C9xFrrBOnmWlEJ3pZm2gc4_5Rtlj8c"
         }
       ],
       "services": {
